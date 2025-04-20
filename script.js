@@ -103,7 +103,12 @@ async function main() {
                 if (name.length + extension.length > 255) name = name.slice(0, 255 - extension.length);
                 return (pattern || _dir)
                     .replaceAll(/\{js:(.*?)#}/g, function (_, code) {
-                        return eval(code);
+                        try {
+                            return eval(code);
+                        } catch (e) {
+                            console.error('JS占位符代码执行错误:', e);
+                            return ''; // 返回空字符串防止路径错误
+                        }
                     })
                     .replaceAll(/[\/\\]/g, '≸∱').replaceAll(':', '∱≸')
                     .replaceAll('{service}', post.service)
@@ -182,9 +187,20 @@ async function main() {
     }
 
     async function downloadPostContent(post, params = undefined) {
-        if (Object.keys(post.file).length !== 0) post.attachments.unshift(post.file)
+        // 添加属性校验
+        if (!post?.service || !post?.user || !post?.id) {
+            console.error('无效的post数据:', post);
+            return;
+        }
+        const parsedPublished = Date.parse(post.published);
+        if (isNaN(parsedPublished)) {
+            console.error('Skipping post due to invalid published date:', post.id);
+            return;
+        }
+        if (Object.keys(post.file).length !== 0) post.attachments.unshift(post.file);
         const padStart = Math.max(3, post.attachments.length.toString().length);
-        const published = new Date(Date.parse(post.published));
+        const published = new Date(parsedPublished);
+
         // 解析日期参数并检查有效性
         const after = params.after ? new Date(params.after) : null;
         const before = params.before ? new Date(params.before) : null;
