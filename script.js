@@ -185,6 +185,19 @@ async function main() {
         if (Object.keys(post.file).length !== 0) post.attachments.unshift(post.file)
         const padStart = Math.max(3, post.attachments.length.toString().length);
         const published = new Date(Date.parse(post.published));
+        // 解析日期参数并检查有效性
+        const after = params.after ? new Date(params.after) : null;
+        const before = params.before ? new Date(params.before) : null;
+        if (after && isNaN(after.getTime())) {
+            console.error('Invalid "after" date:', params.after);
+            return;
+        }
+        if (before && isNaN(before.getTime())) {
+            console.error('Invalid "before" date:', params.before);
+            return;
+        }
+        if (after && published < after) return;
+        if (before && published > before) return;
         if (!params.after.isEmpty() && published < new Date(params.after)) return;
         if (!params.before.isEmpty() && published > new Date(params.before)) return;
         if (!params.regex.isEmpty() && !new RegExp(params.regex).test(post.title)) return;
@@ -543,5 +556,5 @@ String.prototype.isEmpty = function() {
 }
 
 Date.prototype.toDateInputString = function () {
-    return new Date().toJSON().slice(0, 10)
+    return this.toISOString().slice(0, 16)
 }
