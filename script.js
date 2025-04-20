@@ -80,7 +80,7 @@ async function main() {
                     || (/^[a-zA-Z0-9]+$/.test(name) && post.service === "fanbox") || name.length + extension.length > 255;
                 if (name.length + extension.length > 255) name = name.slice(0, 255 - extension.length);
                 return _dir
-                    .replaceAll(/\{js:(.*)#}/g, function (_, code) {
+                    .replaceAll(/\{js:(.*?)#}/g, function (_, code) {
                         return eval(code);
                     })
                     .replaceAll(/[\/\\]/g, '≸∱').replaceAll(':', '∱≸')
